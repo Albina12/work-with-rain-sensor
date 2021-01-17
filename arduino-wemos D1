@@ -1,0 +1,72 @@
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#ifndef STASSID
+#define STASSID "MojaTVPhone_NetFlat_316830"
+#define STAPSK  "DNNTGOPJPGDNNTGOPJPG"
+#endif
+
+const char* ssid     = STASSID;
+const char* password = STAPSK;
+const char* host = "192.168.1.18";
+const uint16_t port = 8080;
+const int capteur_D = D4;
+const int capteur_A = A0;
+int val_analogique;
+ESP8266WiFiMulti WiFiMulti;
+
+void setup() {
+  pinMode(capteur_D, INPUT);
+  pinMode(capteur_A, INPUT);
+  Serial.begin(115200);
+  // We start by connecting to a WiFi network
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP(ssid, password);
+  Serial.println();
+  Serial.println();
+  Serial.print("Wait for WiFi... ");
+  while (WiFiMulti.run() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
+  }
+ 
+  Serial.println("");
+  Serial.println("WiFi connected");
+  Serial.println("IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
+}
+void loop() {
+  Serial.print("connecting to ");
+  Serial.print(host);
+  Serial.print(':');
+  Serial.println(port);
+
+  // Use WiFiClient class to create TCP connections
+  WiFiClient client;
+  if (!client.connect(host, port)) {
+    Serial.println("connection failed");
+    Serial.println("wait 5 sec...");
+    delay(5000);
+    return;
+  }
+  // This will send the request to the server
+ if(digitalRead(capteur_D) == LOW) 
+  {
+    client.println("Kiša je vani.");
+    delay(10); 
+  }
+  else
+  {
+    client.println("Sunce je vani.");
+    delay(10); 
+  }
+  //read back one line from server
+  Serial.println("receiving from remote server");
+  String line = client.readStringUntil('\r');
+  Serial.println(line);
+
+  Serial.println("closing connection");
+  client.stop();
+  Serial.println("wait 5 sec...");
+  delay(5000);
+}
